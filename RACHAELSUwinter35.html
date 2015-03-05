@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>winter33</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.pie.js"></script>
+
+    <!---
+    <script src="charge107.js"></script>
+    <script language="javascript" type="text/javascript" src="left107.js"></script>
+
+    <script src="https://cdn.socket.io/socket.io-1.3.4.js"></script>
+    -->
+    <style>
+    body {
+        background-color: rgb(247,247,240);
+        margin-left:10%;
+        margin-right: 10%;
+        margin-top: 2%;
+        margin-bottom: 5%;
+    }
+
+    #jumbotron{
+        min-height:300px;
+        background-color: rgb(247,247,240);
+    }
+
+    .in-jumbo{
+        color: rgb(50,50,50);
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .jumbo-btn{
+        margin-top: 2%;
+        position: relative;
+            right: 200px;
+            top:60px;
+    }
+
+    #robot-control {
+        position: relative;
+            top:60px;
+    }
+
+    #title{
+    font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 500;
+    line-height: 26.3999996185303px;
+    }
+
+    #passiveMode{
+        position:relative;
+            left:170px;
+        background-color: Aliceblue;
+    }
+
+    #safeMode{
+        position:relative;
+            left:170px;
+        background-color: rgb(100,150,165);
+    }
+
+    #fullMode{
+        position:relative;
+            left:170px;
+        background-color: rgb(50,100,150);
+    }
+
+    #jumbo-pic{
+        position: relative;
+            left: 425px;
+    }
+
+    .move {
+        color: rgb(50,50,50);
+        font-family: Arial, Helvetica, sans-serif;
+        margin-top: 2%;
+    }
+
+    #move{
+        text-align: center;
+    }
+
+    .buttons{
+        width:33%;
+        margin-left: auto;
+        margin-right: auto;
+        position:absolute;
+    }
+
+    .first{
+        width:33%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .forward{
+        background-color: Aliceblue;
+        color: rgb(50,50,50);
+    }
+
+    .second{
+        width:33%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .side{
+        background-color: rgb(100,150,165);
+        color: rgb(50,50,50);
+    }
+
+    .third{
+        width:33%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .back{
+        background-color: rgb(50,100,150);
+        color: rgb(50,50,50);
+    }
+
+    .navbar{
+        background-color: rgb(50,50,50);
+    }
+
+    #sensors{
+        background-color: rgb(50,50,50);
+        color: rgb(50,100,150);
+    }
+
+    #controls{
+        background-color: rgb(50,50,50);
+        color: rgb(50,100,150);
+    }
+
+    #music{
+        background-color: rgb(50,50,50);
+        color: rgb(50,100,150);
+    }
+
+    .music{
+        background-color: rgb(225,115,105);
+        color: rgb(50,50,50);
+        width:33%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 1%;
+    }
+
+    .color-sense{
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .move:hover{
+     color: rgb(255,255,255);
+     background-color: (50,50,50);
+    }
+
+    .jumbo-btn:hover{
+     color: rgb(255,255,255);
+    }
+
+    #sensors:hover{
+        color:white;
+    }
+
+    #controls:hover{
+        color:white;
+    }
+
+    #music:hover{
+        color:white;
+    }
+
+    .music:hover{
+     color: rgb(255,255,255);
+    }    
+    </style>
+
+    <script>
+
+        $(document).ready(function(){
+            $("#sensors").click(function(){
+                $("#battery").toggleClass('hide');
+            });
+        });
+
+        $(document).ready(function(){
+            $("#controls").click(function(){
+                $("#robot-move").toggle();
+            });
+        });
+
+        $(document).ready(function(){
+            $("#music").click(function(){
+                $("#music-play").toggleClass('hide');
+            });
+        });
+
+
+        //chargeplot = makeChargePlot();
+
+        $("#togglesensors").click(function(e) {
+            //console.log("togglesensors");
+            $("#allsensors").toggleClass('hidden');
+        });
+        //var socket = io.connect('http://10.48.102.xxx:3001'); //change this to match your robot
+        //var socket = io.connect('http://10.48.102.111:3001'); //change this to match your robot
+
+        //socket.on('disconnect', function() {
+        //     console.log('got disconnected');
+        // });
+
+    var tempo = 2000;
+    mysong = [
+        [261, tempo * .125],
+        [261, tempo * .125],
+        [261, tempo * .125],
+        [698, tempo * .25],
+        [880, tempo * .25],
+        [null, 50]
+    ];
+
+    function sensop(mag) {
+        //newmag = 2 * ((1 - mag) - .5);
+        newmag = mag
+            //console.log(mag, newmag);
+        return newmag;
+    }
+    $(document).ready(function() {
+
+
+        //chargeplot = makeChargePlot();
+
+        $("#togglesensors").click(function(e) {
+            //console.log("togglesensors");
+            $("#allsensors").toggleClass('hidden');
+        });
+        //var socket = io.connect('http://10.48.102.xxx:3001'); //change this to match your robot
+        var socket = io.connect('http://10.48.102.111:3001'); //change this to match your robot
+        // batterycapacity(socket);
+        // leftsignal(socket);
+        // front_leftsignal(socket);
+
+        socket.on('sensordata', function(data) {
+            var frsig = 1-data.cliff_sensors.front_right.signal.magnitude;
+            frsig = frsig * 256;
+                frsigcol=Math.round(frsig);
+            chargeData[0].color = "rgb("+frsigcol+","+frsigcol+","+frsigcol+")";
+            $.plot($("#batterycapacity"), chargeData, chargeOptions);
+            $("#allsensors").text(JSON.stringify(data));
+            
+            var frsig = 1-data.cliff_sensors.front_left.signal.magnitude;
+            frsig = frsig * 256;
+                frsigcol=Math.round(frsig);
+            chargeData[1].color = "rgb("+frsigcol+","+frsigcol+","+frsigcol+")";
+            $.plot($("#batterycapacity"), chargeData, chargeOptions);
+            $("#allsensors").text(JSON.stringify(data));
+            
+            var frsig = 1-data.cliff_sensors.right.signal.magnitude;
+            frsig = frsig * 256;
+                frsigcol=Math.round(frsig);
+            chargeData[3].color = "rgb("+frsigcol+","+frsigcol+","+frsigcol+")";
+            $.plot($("#batterycapacity"), chargeData, chargeOptions);
+            $("#allsensors").text(JSON.stringify(data));
+            
+            var frsig = 1-data.cliff_sensors.left.signal.magnitude;
+            frsig = frsig * 256;
+                frsigcol=Math.round(frsig);
+            chargeData[4].color = "rgb("+frsigcol+","+frsigcol+","+frsigcol+")";
+            $.plot($("#batterycapacity"), chargeData, chargeOptions);
+            $("#allsensors").text(JSON.stringify(data));
+        });
+
+
+    var chargeData = [
+
+        {
+            label: "right",
+            data: 1,
+            color: "#00ff00"
+        }, {
+            label: "front_right",
+            data: 1,
+            color: "#ff0000"
+
+        },
+        {
+            label: "behind",
+            data: 8,
+            color: "#ffffff"
+
+        },
+        {
+            label: "left",
+            data: 1,
+            color: "#ff00ff"
+
+        },
+        {
+            label: "front_left",
+            data: 1,
+            color: "#ffff00"
+
+        }
+    ];
+
+    var chargeOptions = {
+        legend: {
+            show: false
+        },
+        series: {
+            pie: {
+                show: true,
+                innerRadius: 0.3,
+                label: {
+                    show: true,
+                    radius: .5,
+                    background: {
+                        opacity: 0.5,
+                        color: '#000'
+                    }
+
+                }
+            }
+        }
+    };
+
+
+        
+        socket.on('sensordata', function(data) {
+
+            //dataSet[0].data = Number(dataSet[0].data) + 1; 
+
+            //$.plot($("#flot-placeholder"), dataSet, options);
+            $("#current").text(data.battery.current.amps);
+            $("#voltage").text(data.battery.voltage.volts.toFixed(2));
+            $("#left").text(data.cliff_sensors.left.signal.raw);
+            $("#front_left").text(data.cliff_sensors.front_left.signal.raw);
+            $("#front_right").text(data.cliff_sensors.front_right.signal.raw);
+            $("#right").text(data.cliff_sensors.right.signal.raw);
+
+            $(".left_signal").css("opacity", sensop(data.cliff_sensors.left.signal.magnitude));
+            console.log(data.cliff_sensors.left.signal.magnitude);
+            $(".left_signal").text(sensop(data.cliff_sensors.left.signal.magnitude));
+
+            $(".front_left_signal").css("opacity", sensop(data.cliff_sensors.front_left.signal.magnitude));
+            $(".front_left_signal").text(sensop(data.cliff_sensors.front_left.signal.magnitude));
+
+            $(".front_right_signal").css("opacity", sensop(data.cliff_sensors.front_right.signal.magnitude));
+            $(".front_right_signal").text(sensop(data.cliff_sensors.front_right.signal.magnitude));
+
+            $(".right_signal").css("opacity", sensop(data.cliff_sensors.right.signal.magnitude));
+            $(".right_signal").text(sensop(data.cliff_sensors.right.signal.magnitude));
+
+            if (data.song.playing == false) {
+                //socket.emit('sing', [[data.cliff_sensors.front_left.signal.magnitude * 1000,data.cliff_sensors.front_right.signal.magnitude * 1000]]);
+            }
+
+            $("#allsensors").text(JSON.stringify(data));
+        });
+
+        socket.on('countup', function(data) {
+            //console.log(data);
+            $("#countup").text(data);
+        });
+
+
+        $("#forward").click(function(e) {
+            console.log('forward');
+            socket.emit('drive', {
+                left: 15,
+                right: 15
+            });
+        });   
+
+        $("#back").click(function(e) {
+            console.log('back');
+            socket.emit('drive', {
+                left: -15,
+                right: -15
+            });
+        });
+
+        $("#stop").click(function(e) {
+            console.log('stop');
+            socket.emit('drive', {
+                left: 0,
+                right: 0
+            });
+        });
+
+
+        $("#turn-left").click(function(e) {
+            console.log('left');
+            socket.emit('drive', {
+                left: -15,
+                right: 15
+            });
+        });
+
+
+        $("#turn-right").click(function(e) {
+            console.log('right');
+            socket.emit('drive', {
+                left: 15,
+                right: -15
+            });
+        });
+
+        $("#forward-right").click(function(e) {
+            console.log('forward-right');
+            socket.emit('drive', {
+                left: 15,
+                right: -15
+            });
+        });
+
+        $("#forward-left").click(function(e) {
+            console.log('forward-left');
+            socket.emit('drive', {
+                left: 15,
+                right: -15
+            });
+        });
+
+        $("#back-left").click(function(e) {
+            console.log('back-left');
+            socket.emit('drive', {
+                left: 15,
+                right: -15
+            });
+        });
+
+        $("#back-right").click(function(e) {
+            console.log('back-right');
+            socket.emit('drive', {
+                left: 15,
+                right: -15
+            });
+        });
+
+        $("#playsong").click(function(e) {
+            socket.emit('sing', mysong);
+        });
+
+        $("#passiveMode").click(function(e) {
+            socket.emit('passiveMode');
+            console.log('passive');
+        });
+        $("#safeMode").click(function(e) {
+            socket.emit('safeMode');
+            console.log('safe');
+        });
+
+        $("#fullMode").click(function(e) {
+            socket.emit('fullMode');
+            console.log('full');
+        });
+
+        socket.on('sensordata', function(data) {
+            $("#voltage").text(data.battery.voltage.volts.toFixed(2));
+            $("#current").text(data.battery.current.amps.toFixed(2));
+            var power = data.battery.voltage.volts * data.battery.current.amps;
+            $("#power").text(power.toFixed(2));
+            var batCapPer = data.battery.capacity.percent;
+            $("#batCapPer").text((batCapPer * 100).toFixed(2));
+            $("#tempF").text(data.battery.temperature.fahrenheit.toFixed(2));
+            $("#charging").text(power > 0);
+            $("#allsensors").text(JSON.stringify(data));
+        });
+
+
+        $('body').keydown(function(event) {
+            console.log(event.which);
+            speed = $("#speed").text();
+            //speed = 100;
+            if (event.which === 87 || event.which === 38) //w, up arrow - move forward
+            {
+                //socket.emit('sing', [[300,300]]);
+                event.preventDefault();
+                speed = $("#speed").text();
+                speed = speed * 1 + 25;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: speed,
+                    right: speed
+                });
+
+            }
+
+            if (event.which === 83 || event.which === 40) //s, down arrow - move backward
+            {
+                event.preventDefault();
+                speed = $("#speed").text();
+                speed = speed * 1 - 25;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: speed,
+                    right: speed
+                });
+            }
+
+
+
+            if (event.which === 37) //left arrow - move right
+            {
+                event.preventDefault();
+                speed = $("#speed").text();
+                speed = 25;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: speed,
+                    right: -speed
+                });
+
+            }
+
+            if (event.which === 65) //a - forward left
+            {
+                event.preventDefault();
+                speed = $("#speed").text();
+                (speed < 25) ? speed=25 : speed = speed;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: Math.round(speed),
+                    right: Math.round(speed -25)
+                });
+
+            }
+
+            if (event.which === 68) //d - forward left
+            {
+                event.preventDefault();
+                speed = $("#speed").text();
+                (speed < 25) ? speed=25 : speed = speed;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: Math.round(speed - 25),
+                    right: Math.round(speed)
+                });
+
+            }
+
+            if (event.which === 39) //right arrow - move left
+            {
+                event.preventDefault();
+                speed = $("#speed").text();
+                speed = 25;
+                $("#speed").text(speed);
+                socket.emit('drive', {
+                    left: -speed,
+                    right: speed
+                });
+            }
+
+            if (event.which === 32) //space - stop
+
+            {
+                event.preventDefault();
+
+
+
+                function slowtostop() {
+                    speed = $("#speed").text();
+                    if (Math.abs(speed) <= 50) {
+                        speed = 0;
+                        $("#speed").text(speed);
+                        socket.emit('drive', {
+                            left: speed,
+                            right: speed
+                        });
+                        return;
+                    }
+                    setTimeout(function() {
+                        speed = $("#speed").text() * 1;
+                        speed += speed > 0 ? Number(-75) : Number(75);
+                        $("#speed").text(speed);
+                        socket.emit('drive', {
+                            left: speed,
+                            right: speed
+                        });
+                        slowtostop();
+                    }, 40);
+                }
+
+                slowtostop();
+
+            }
+        });
+
+    });
+
+    // $(document).ready(function() {
+    //     $.plot($("#flot-placeholder"), dataSet, options);
+
+    //     $("#flot-placeholder").click(function() {
+    //         dataSet[0].data = Number(dataSet[0].data) + 1; 
+    //         console.log(dataSet);
+
+    //         $.plot($("#flot-placeholder"), dataSet, options);
+    //     });
+    // });
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-3 left_signal darkness">
+                left
+            </div>
+            <div class="col-xs-3 front_left_signal darkness">
+                front_left
+            </div>
+            <div class="col-xs-3 front_right_signal darkness">
+                front_right
+            </div>
+            <div class="col-xs-3 left_signal darkness">
+                right
+            </div>
+        </div>
+
+    <div class="jumbotron" id="jumbotron">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 in-jumbo" id="title">
+                    <h1>ROBOT 111</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" id="jumbo-pic">
+                    <img src="gear-sil.png" alt="cogs" height="100"></img>
+                </div>
+            </div>            
+            <div class="collumn">
+                <div class="col-md-6 in-jumbo">
+                    <div class="row">
+                        <h3 id="robot-control">Robot Control</h3>
+                    </div>
+                    <div class="row">
+                        <button class=" btn col-md-4 jumbo-btn" id="passiveMode">Passive Mode</button>
+                    </div>
+                    <div class="row in-jumbo">
+                        <button class=" btn col-md-4 jumbo-btn" id="safeMode">Safe Mode</button>
+                    </div>
+                    <div class="row in-jumbo">
+                        <button class=" btn col-md-4 jumbo-btn" id="fullMode">Full Mode</button>
+                    </div>  
+                </div>
+            </div>
+            <div class="col-md-6 col-md-offset-4 color-sense">
+                    <div id="batterycapacity" style="height:300px"></div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div clas="container">    
+        <div class="row">                  
+            <nav class="navbar navbar-inverse">
+                <ul class="nav nav-tabs" id="move">
+                    <li role="presentation" class="buttons btn"><button class="btn-block btn" id="controls">Controls</button></li>
+                    <li role="presentation" class="buttons btn"><button class="btn-block btn" id="sensors">Sensors</button></li>
+                    <li role="presentation" class="buttons btn"><button class="btn-block btn" id="music">Music</button></li>
+                </ul> 
+            </nav>
+        </div>  
+    </div>
+
+    <div class="container" id="robot-move">
+        <div class="row">
+            <div class="col-md-2 first">
+                <button class=" btn-block btn move forward" id="forward-left"><span class="glyphicon glyphicon-arrow-up rotate-left-45"></span>Forward-left
+                </button>
+            </div>
+            <div class="col-md-2 first">
+                <button class=" btn btn-block move forward" id="forward">Forward<span class="glyphicon glyphicon-arrow-up"></span>
+                </button>
+            </div>
+            <div class="col-md-2 first">
+                </button>
+                <button class="\ btn btn-block move forward" id="forward-right">Forward-right<span class="glyphicon glyphicon-arrow-up rotate-right-45"></span>
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2 second">
+                <button class=" btn btn-block move side" id="turn-left"><span class="glyphicon glyphicon-arrow-left"> Left</span>
+                </button>
+            </div>
+            <div class="col-md-2 second">
+
+                <button class="btn btn-block  move side" id="stop">Stop
+                    <span class="glyphicon glyphicon-stop"></span>
+                </button>
+            </div>
+
+            <div class="col-md-2 second">
+                <button class=" btn btn-block move side" id="turn-right">Right<span class="glyphicon glyphicon-arrow-right"></span>
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2 third">
+                <button class=" btn btn-block move back" id="back-left">Back-Left
+                </button>
+            </div>
+            <div class="col-md-2 third">
+                <button class=" btn btn-block move main back" id="back">Back<span class="glyphicon glyphicon-arrow-down"></span>
+                </button>
+            </div>
+            <div class="col-md-2 third">
+                <button class=" btn btn-block move back" id="back-right">Back-Right
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hide" id="battery">
+        <h3 >Battery</h3>
+        <div class="row">
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Charging</div>
+                <div class="sensor-value" id="charging">...</div>
+            </div>
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Voltage</div>
+                <div class="sensor-value" id="voltage">...</div>
+            </div>
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Current</div>
+                <div class="sensor-value" id="current">...</div>
+            </div>
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Power</div>
+                <div class="sensor-value" id="power">...</div>
+            </div>
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Capacity %</div>
+                <div class="sensor-value" id="batCapPer">...</div>
+            </div>
+            <div class="col-xs-2 sensor-block">
+                <div class="sensor-title">Temp F</div>
+                <div class="sensor-value" id="tempF">...</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <button id="togglesensors">Toggle Sensors</button>
+            <div class="hidden" id="allsensors">...</div>
+        </div>
+    </div>
+    <div class="containder hide" id="music-play">
+        <div class="row">
+            <div class="col-xs-12">
+                <button id="playsong" class="btn btn-block music">Play Music
+                    <span class="glyphicon glyphicon-music"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
